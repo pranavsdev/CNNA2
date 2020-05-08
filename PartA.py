@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
 import sys
+import os
 from contextlib import redirect_stdout
 
 #NUM_EPOCHS = 20
@@ -20,7 +21,7 @@ def loadDataH5():
 
 trainX, trainY, testX, testY = loadDataH5()
 
-def plotAccLoss(H, NUM_EPOCHS):
+def plotAccLoss(H, NUM_EPOCHS, path, description):
 
     plt.style.use("ggplot")
     plt.figure()
@@ -32,13 +33,34 @@ def plotAccLoss(H, NUM_EPOCHS):
     plt.xlabel("Epoch #")
     plt.ylabel("Loss/Accuracy")
     plt.legend(['train_loss', 'val_loss', 'train_acc', 'val_acc'], loc='upper right')
-    plt.show()
 
-def save_model_summary(modelname, model):
-    filename = modelname+'_model_summary.txt'
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    plt.savefig(path+description)
+
+    #plt.show()
+
+def save_model_summary(path, cnn_modelname, model, description):
+    filename = path+"model_summary"+"_"+cnn_modelname+'_'+description+".txt"
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     with open(filename, 'w') as f:
         with redirect_stdout(f):
             model.summary()
+
+def save_execution_summary(path, cnn_modelname, model, testdata, testlabels, description):
+    filename = path+"model_evaluate"+"_"+cnn_modelname+'_'+description+".txt"
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    with open(filename, 'w') as f:
+        with redirect_stdout(f):
+            model.evaluate(testdata,testlabels)
 
 def baselineCNN(width, height, depth, classes):
     """Implementation of baseline CNN with single convolutional layer, 
@@ -269,126 +291,231 @@ def CNN_Model_6(width, height, depth, classes):
     inputShape = (width, height, depth)
     model = tf.keras.models.Sequential()
     
-    model.add(tf.keras.layers.Conv2D (64, (3, 3), padding="same",input_shape=inputShape, activation='relu'))
-    model.add(tf.keras.layers.BatchNormalization())
-    model.add(tf.keras.layers.Dropout(0.2))
+    model.add(tf.keras.layers.Conv2D (64, (3, 3), strides=(2, 2),input_shape=inputShape, activation='relu'))
+    model.add(tf.keras.layers.Conv2D(64, (3, 3), strides=(2, 2), activation='relu'))
 
-    model.add(tf.keras.layers.Conv2D(32, (3, 3), activation='relu'))
-    model.add(tf.keras.layers.BatchNormalization())
-    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
-    model.add(tf.keras.layers.Dropout(0.2))
-
-    model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
-    model.add(tf.keras.layers.BatchNormalization())
-
-    model.add(tf.keras.layers.Conv2D(32, (3, 3), activation='relu'))
-    model.add(tf.keras.layers.BatchNormalization())
-    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(tf.keras.layers.Dropout(0.2))
-    
-    model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
-    model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))    
+    model.add(tf.keras.layers.Conv2D(128, (3, 3), activation='relu'))
     model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
 
     model.add(tf.keras.layers.Flatten())
     model.add(tf.keras.layers.Dense(1000, activation='relu'))
+    model.add(tf.keras.layers.Dropout(0.4))
+
+    model.add(tf.keras.layers.Dense(classes, activation='softmax'))
+    
+    return model
+
+def CNN_Model_7(width, height, depth, classes):
+    """CNN Model 7"""
+
+    inputShape = (width, height, depth)
+    model = tf.keras.models.Sequential()
+    
+    model.add(tf.keras.layers.Conv2D (32, (3, 3), padding="same",input_shape=inputShape, activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+
+    model.add(tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+    model.add(tf.keras.layers.Dropout(0.5))
+
+    model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+
+    model.add(tf.keras.layers.Conv2D(64, (5, 5), activation='relu'))
+    model.add(tf.keras.layers.BatchNormalization())
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(tf.keras.layers.Dropout(0.5))
+
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.Dense(500, activation='relu'))
     model.add(tf.keras.layers.Dropout(0.5))
 
     model.add(tf.keras.layers.Dense(classes, activation='softmax'))
     
     return model
 
-def data_augmentation_compile_and_train(modelName, batch_size, learning_rate, NUM_EPOCHS):
-    print("data aug function begins---")
-    # resize all images to thie width and height
-    #width, height= 128, 128
-    #trainDataDir = '/content/dogs_cats/data/train'
-    # print(trainDataDir.shape)
-    #validationDataDir= '/content/dogs_cats/data/validation'
-    numTrainingSamples = 1020
-    numValidationSamples = 340
+def CNN_Model_8(width, height, depth, classes):
+    """CNN Model 8"""
 
-    batchSize = 64
+    inputShape = (width, height, depth)
+    model = tf.keras.models.Sequential()
+    
+    model.add(tf.keras.layers.Conv2D (16, (3, 3), padding="same",input_shape=inputShape, activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
 
-    opt = keras.optimizers.SGD(lr=learning_rate)
-    model = globals()[modelName](width=128, height=128, depth=3, classes=17)
+    model.add(tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
 
-    print(model.summary())
-    save_model_summary(modelName+'_data_augmentation_', model)
+    model.add(tf.keras.layers.Conv2D(64, (5, 5), padding="same", activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+    
+    model.add(tf.keras.layers.Conv2D(128, (7, 7), activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(tf.keras.layers.Dropout(0.4))
 
-    model.compile(loss="sparse_categorical_crossentropy",optimizer=opt,metrics=["accuracy"])
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.Dense(500, activation='relu'))
+    model.add(tf.keras.layers.Dropout(0.4))
 
-    #initialize data generator with various parameters
-    trainDataGenerator= tf.keras.preprocessing.image.ImageDataGenerator( rotation_range=90, height_shift_range=0.5, width_shift_range=0.3, shear_range=0.2, zoom_range=[0.4,0.9], horizontal_flip=True)
-    testDataGenerator= tf.keras.preprocessing.image.ImageDataGenerator( rotation_range=90, height_shift_range=0.5, width_shift_range=0.3, shear_range=0.2, zoom_range=[0.4,0.9], horizontal_flip=True)
+    model.add(tf.keras.layers.Dense(classes, activation='softmax'))
+    
+    return model
 
-    #assign train, test data to data generator along with the labels
-    train_generator = trainDataGenerator.flow(trainX, trainY, batch_size)
-    validation_generator = testDataGenerator.flow(testX, testY, batch_size)
-  
-    #fit the model on real time data-augmentation
-    history = model.fit(
-        train_generator,
-        steps_per_epoch= numTrainingSamples / batch_size,
-        epochs=NUM_EPOCHS,
-        validation_data=validation_generator,
-        validation_steps=numValidationSamples / batch_size)
+def CNN_Model_9(width, height, depth, classes):
+    """CNN Model 9"""
 
-    print ("Test Data Loss and Accuracy: ", model.evaluate(testX, testY))
-  
-    plotAccLoss(history, NUM_EPOCHS)
+    inputShape = (width, height, depth)
+    model = tf.keras.models.Sequential()
+    
+    model.add(tf.keras.layers.Conv2D (16, (3, 3), padding="same",input_shape=inputShape, activation='relu'))
+    model.add(tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
 
+    model.add(tf.keras.layers.Conv2D(64, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.Conv2D(64, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.Conv2D(64, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
 
-def compile_and_train(modelName, batch_size, learning_rate, NUM_EPOCHS):
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.Dense(500, activation='relu'))
+    model.add(tf.keras.layers.Dropout(0.4))
 
-    # initialize the optimizer and model
-    print("Compiling model...")
-    opt = keras.optimizers.SGD(lr=learning_rate)
+    model.add(tf.keras.layers.Dense(classes, activation='softmax'))
+    
+    return model
 
-    model = globals()[modelName](width=128, height=128, depth=3, classes=17)
+def CNN_Model_10(width, height, depth, classes):
+    """CNN Model 10"""
 
-    print(model.summary())
-    save_model_summary(modelName, model)
+    inputShape = (width, height, depth)
+    model = tf.keras.models.Sequential()
+    
+    model.add(tf.keras.layers.Conv2D (16, (3, 3), padding="same",input_shape=inputShape, activation='relu'))
+    model.add(tf.keras.layers.Conv2D(32, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+    model.add(tf.keras.layers.Dropout(0.5))
 
-    model.compile(loss="sparse_categorical_crossentropy",optimizer=opt,metrics=["accuracy"])
+    model.add(tf.keras.layers.Conv2D(64, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.Conv2D(128, (3, 3), padding="same", activation='relu'))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2), strides=(2,2)))
+    model.add(tf.keras.layers.Dropout(0.5))
 
-    #trainthenetwork
-    print("Trainingnetwork...")
-    history=model.fit(trainX,trainY,validation_data=(testX,testY),batch_size=batch_size,epochs=NUM_EPOCHS)
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.Dense(500, activation='relu'))
+    model.add(tf.keras.layers.Dropout(0.4))
 
-    print ("Test Data Loss and Accuracy: ", model.evaluate(testX, testY))
+    model.add(tf.keras.layers.Dense(classes, activation='softmax'))
+    
+    return model
 
-    plotAccLoss(history, NUM_EPOCHS)
-
-
-def compile_train_and_checkpoint():
+def compile_and_train(models_dict, batch_size, learning_rate, NUM_EPOCHS, execution_summary):
     
     # initialize the optimizer and model
     print("Compiling model...")
-    opt = keras.optimizers.SGD(lr=0.01)
+    opt = keras.optimizers.SGD(lr=learning_rate)
 
-    fields = {'baselineCNN':baselineCNN,'CNN_Model_1':CNN_Model_1}
+    numTrainingSamples = 1020
+    numValidationSamples = 340
 
-    for key in fields:
+    for key in models_dict:
+        checkpoint=False
+        data_augmentation=False
+
+        result_path="Executions/"+key+"/"
+        cp_path="Checkpoints/"+key+"/"
+
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
+
+        if not os.path.exists(cp_path):
+            os.makedirs(cp_path)
+        
         print("key is ", key)
-        model = fields[key](width=128, height=128, depth=3, classes=17)
-        #model = baselineCNN(width=128, height=128, depth=3, classes=17)
+        model = models_dict[key][0](width=128, height=128, depth=3, classes=17)
+
+        if models_dict[key][1] == True and models_dict[key][2] == False:
+            checkpoint = True
+            #execution_summary=execution_summary+"_cp"
+
+        if models_dict[key][2] == True and models_dict[key][1] == False:
+            data_augmentation = True
+            #execution_summary=execution_summary+"_da"
+
+        if models_dict[key][1] == True and models_dict[key][2] == True:
+            checkpoint = True
+            data_augmentation = True
+            #execution_summary=execution_summary+"_cp_da"
+
 
         print(model.summary())
+        save_model_summary(path=result_path, cnn_modelname=key, model=model, description=execution_summary)
 
         model.compile(loss="sparse_categorical_crossentropy",optimizer=opt,metrics=["accuracy"])
 
-        fname = "Testing/"+key+".hdf5"
-        print("file name-->","weights.{epoch:02d}-{val_loss:.2f}.hdf5")
-        checkpoint = tf.keras.callbacks.ModelCheckpoint(fname, monitor="val_loss", mode="min", save_best_only=True, verbose=1)
+        if checkpoint==True and data_augmentation==False:
+            fname = cp_path+key+"_"+execution_summary+".hdf5"
+            checkpoint = tf.keras.callbacks.ModelCheckpoint(fname, monitor="val_loss", mode="min", save_best_only=True, verbose=1)
 
-        #trainthenetwork
-        print("Trainingnetwork...")
-        history=model.fit(trainX,trainY,validation_data=(testX,testY),batch_size=32,epochs=NUM_EPOCHS, callbacks=[checkpoint])
+            #trainthenetwork
+            print("Trainingnetwork...")
+            history=model.fit(trainX,trainY,validation_data=(testX,testY),batch_size=batch_size,epochs=NUM_EPOCHS, callbacks=[checkpoint])
 
-        print ("Test Data Loss and Accuracy: ", model.evaluate(testX, testY))
+        if checkpoint==False and data_augmentation==True:
+            #initialize data generator with various parameters
+            trainDataGenerator= tf.keras.preprocessing.image.ImageDataGenerator( rotation_range=90, height_shift_range=0.5, width_shift_range=0.3, shear_range=0.2, zoom_range=[0.4,0.9], horizontal_flip=True)
+            testDataGenerator= tf.keras.preprocessing.image.ImageDataGenerator( rotation_range=90, height_shift_range=0.5, width_shift_range=0.3, shear_range=0.2, zoom_range=[0.4,0.9], horizontal_flip=True)
 
-        plotAccLoss(history, NUM_EPOCHS)
+            #assign train, test data to data generator along with the labels
+            train_generator = trainDataGenerator.flow(trainX, trainY, batch_size)
+            validation_generator = testDataGenerator.flow(testX, testY, batch_size)
+        
+            #fit the model on real time data-augmentation
+            history = model.fit(
+                train_generator,
+                steps_per_epoch= numTrainingSamples / batch_size,
+                epochs=NUM_EPOCHS,
+                validation_data=validation_generator,
+                validation_steps=numValidationSamples / batch_size)
+
+
+        if checkpoint==True and data_augmentation==True:
+            fname = cp_path+key+"_"+execution_summary+".hdf5"
+            checkpoint = tf.keras.callbacks.ModelCheckpoint(fname, monitor="val_loss", mode="min", save_best_only=True, verbose=1)
+
+            #initialize data generator with various parameters
+            trainDataGenerator= tf.keras.preprocessing.image.ImageDataGenerator( rotation_range=90, height_shift_range=0.5, width_shift_range=0.3, shear_range=0.2, zoom_range=[0.4,0.9], horizontal_flip=True)
+            testDataGenerator= tf.keras.preprocessing.image.ImageDataGenerator( rotation_range=90, height_shift_range=0.5, width_shift_range=0.3, shear_range=0.2, zoom_range=[0.4,0.9], horizontal_flip=True)
+
+            #assign train, test data to data generator along with the labels
+            train_generator = trainDataGenerator.flow(trainX, trainY, batch_size)
+            validation_generator = testDataGenerator.flow(testX, testY, batch_size)
+        
+            #fit the model on real time data-augmentation
+            history = model.fit(
+                train_generator,
+                steps_per_epoch= numTrainingSamples / batch_size,
+                epochs=NUM_EPOCHS,
+                validation_data=validation_generator,
+                validation_steps=numValidationSamples / batch_size,
+                callbacks=[checkpoint])
+        
+
+        if checkpoint==False and data_augmentation==False:
+            #trainthenetwork
+            print("Trainingnetwork...")
+            history=model.fit(trainX,trainY,validation_data=(testX,testY),batch_size=batch_size,epochs=NUM_EPOCHS)
+            
+            #exe_graph_name_loc = "Executions/"+key+"/"+key+"_"+execution_summary+".png"
+        
+
+        print ("Test Data Loss and Accuracy: ", model.evaluate(testX, testY))        
+        save_execution_summary(path=result_path, cnn_modelname=key, model=model, testdata=testX, testlabels=testY, description=execution_summary)
+
+        graph_description = key+"_"+execution_summary+".png"        
+        plotAccLoss(H=history, NUM_EPOCHS=NUM_EPOCHS, path=result_path, description=graph_description)
 
 
 def fetch_and_test():
@@ -444,8 +571,20 @@ def fetch_and_test():
 
 #data_augmentation_compile_and_train(modelName="CNN_Model_2", batch_size=32, learning_rate=0.01, NUM_EPOCHS=100)
 
-compile_and_train("CNN_Model_5", batch_size=32, learning_rate=0.01, NUM_EPOCHS=50)
+models_dict = {
+'CNN_Model_1':[CNN_Model_1, True, True],
+'CNN_Model_2':[CNN_Model_2, True, True],
+'CNN_Model_3':[CNN_Model_3, True, True],
+'CNN_Model_4':[CNN_Model_4, True, True],
+'CNN_Model_5':[CNN_Model_5, True, True],
+'CNN_Model_6':[CNN_Model_6, True, True],
+'CNN_Model_7':[CNN_Model_7, True, True],
+'CNN_Model_8':[CNN_Model_7, True, True],
+'CNN_Model_9':[CNN_Model_9, True, True],
+'CNN_Model_10':[CNN_Model_10, True, True]
+}
+execution_summary = "base_learners_with_checkpoint"
+#compile_and_train("CNN_Model_5", batch_size=32, learning_rate=0.01, NUM_EPOCHS=50)
 
-
-
-
+compile_and_train(models_dict=models_dict, batch_size=32, learning_rate=0.01, NUM_EPOCHS=70, execution_summary=execution_summary)
+    
