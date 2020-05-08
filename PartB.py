@@ -5,7 +5,7 @@ from tensorflow import keras
 import matplotlib.pyplot as plt
 from keras.callbacks import EarlyStopping
 
-NUM_EPOCHS = 10
+NUM_EPOCHS = 30
 
 def loadDataH5():
     with h5py.File('data1.h5','r') as hf:
@@ -131,36 +131,41 @@ def fineTuning():
     model.add(tf.keras.layers.Dense(256, activation='relu'))  
     model.add(tf.keras.layers.Dense(17, activation='softmax'))
 
-
     print ("\n Phase A - Training Fully Connected Layers\n")
     
     print("Compiling model...")
     opt = keras.optimizers.SGD(lr=0.01)
     model.compile(loss="sparse_categorical_crossentropy",optimizer=opt,metrics=["accuracy"])
     
-    usualCallback = EarlyStopping()
-    overfitCallback = EarlyStopping(monitor='val_accuracy', mode='min', baseline=0.4)
-    history =model.fit(trainX, trainY, epochs=NUM_EPOCHS, callbacks=[overfitCallback], batch_size=32, validation_data=(testX, testY))
+    #usualCallback = EarlyStopping()
+    overfitCallback = EarlyStopping(monitor='val_loss', mode='min', verbose=1)
+    history=model.fit(trainX, trainY, epochs=NUM_EPOCHS, callbacks=[overfitCallback], batch_size=32, validation_data=(testX, testY))
 
-    plotAccLoss(history, history.history.shape[0])
+    plotAccLoss(history, len(history.history['val_loss']))
 
-"""    print ("\n Phase B  - Fine Tune Fully Connected Layer and Selected Convolutional Layers \n")
+    print ("\n Phase B  - Fine Tune Fully Connected Layer and Selected Convolutional Layers \n")
     vggModel.trainable = True
     trainableFlag = False
+    
     for layer in vggModel.layers:
         if layer.name == 'block4_conv1':
             trainableFlag = True
         layer.trainable = trainableFlag
     vggModel.summary()
+
     for layer in vggModel.layers[:-3]:
         layer.trainable=False
 
     for layer in vggModel.layers:
         sp= '  '[len(layer.name):]
-        print(layer.name,sp,layer.trainable)
+        print("sp--->",layer.name,sp,layer.trainable)
+    #print("model summary--->", model.summary())
+
+    model.compile(loss="sparse_categorical_crossentropy",optimizer=keras.optimizers.SGD(lr=1e-5),metrics=["accuracy"])
+    history =model.fit(trainX, trainY, epochs=NUM_EPOCHS, batch_size=32, validation_data=(testX, testY))
+
+    plotAccLoss(history, NUM_EPOCHS)
 
 
-
-
-featureExtractionTransferLearning_NN()"""
+#featureExtractionTransferLearning_NN()
 fineTuning()
