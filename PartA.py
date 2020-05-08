@@ -520,13 +520,24 @@ def compile_and_train(models_dict, batch_size, learning_rate, NUM_EPOCHS, execut
 
 def fetch_and_test():
     models = []
-    ensemble_models = {'baselineCNN':baselineCNN,'CNN_Model_1':CNN_Model_1}
+    ensemble_models = models_dict = {
+    'CNN_Model_1':CNN_Model_1,
+    'CNN_Model_2':CNN_Model_2, 
+    'CNN_Model_3':CNN_Model_3,
+    'CNN_Model_4':CNN_Model_4, 
+    'CNN_Model_5':CNN_Model_5, 
+    'CNN_Model_6':CNN_Model_6, 
+    'CNN_Model_7':CNN_Model_7,
+    'CNN_Model_8':CNN_Model_8,
+    'CNN_Model_9':CNN_Model_9, 
+    'CNN_Model_10':CNN_Model_10
+    }
     for key in ensemble_models:
         print("key is ", key)
-        model = baselineCNN(width=128, height=128, depth=3, classes=17)
+        #model = baselineCNN(width=128, height=128, depth=3, classes=17)
         model = ensemble_models[key](width=128, height=128, depth=3, classes=17)
         
-        fname = "Testing/"+key+".hdf5"
+        fname = "Checkpoints/"+key+"/"+key+"_base_learners_with_checkpoint"+".hdf5"
         model.load_weights(fname)
         opt = keras.optimizers.SGD(lr=0.01)
         model.compile(loss="sparse_categorical_crossentropy",optimizer=opt,metrics=["accuracy"])
@@ -547,7 +558,7 @@ def fetch_and_test():
 
     count = (tf.reduce_sum(tf.cast(equality,tf.float32)))
     print(count)
-    print(tf.math.divide(count, testY.shape)[0])
+    print("ensemble accuracy-->",tf.math.divide(count, testY.shape)[0])
 
     #print(keras.layers.Average()pred)
     #print(pred.shape)
@@ -579,12 +590,13 @@ models_dict = {
 'CNN_Model_5':[CNN_Model_5, True, True],
 'CNN_Model_6':[CNN_Model_6, True, True],
 'CNN_Model_7':[CNN_Model_7, True, True],
-'CNN_Model_8':[CNN_Model_7, True, True],
+'CNN_Model_8':[CNN_Model_8, True, True],
 'CNN_Model_9':[CNN_Model_9, True, True],
 'CNN_Model_10':[CNN_Model_10, True, True]
 }
 execution_summary = "base_learners_with_checkpoint"
 #compile_and_train("CNN_Model_5", batch_size=32, learning_rate=0.01, NUM_EPOCHS=50)
 
-compile_and_train(models_dict=models_dict, batch_size=32, learning_rate=0.01, NUM_EPOCHS=70, execution_summary=execution_summary)
+#compile_and_train(models_dict=models_dict, batch_size=32, learning_rate=0.01, NUM_EPOCHS=70, execution_summary=execution_summary)
     
+fetch_and_test()
